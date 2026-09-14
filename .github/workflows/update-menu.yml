@@ -1,4 +1,4 @@
-name: Update cafeteria menu
+name: Update menu
 
 on:
   schedule:
