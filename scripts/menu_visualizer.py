@@ -5,7 +5,9 @@ from xml.sax.saxutils import escape
 
 import cairosvg
 
-FONT_FAMILY = "'Microsoft JhengHei', '微軟正黑體', 'Noto Sans CJK TC', 'Noto Sans TC', sans-serif"
+# cairosvg only uses the first family in font-family (no fallback list), so the font
+# must be installed under exactly this name. CI sets MENU_FONT_FAMILY=Noto Sans CJK TC.
+FONT_FAMILY = f"'{os.environ.get('MENU_FONT_FAMILY', 'Microsoft JhengHei')}'"
 HIGHLIGHT_AFTER_ITEM = 4  # thicker divider between rice (1-5) and noodle (6+) items
 
 

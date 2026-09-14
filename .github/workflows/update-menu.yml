@@ -34,7 +34,9 @@ jobs:
       - name: Install CJK fonts and Cairo
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends fonts-noto-cjk libcairo2
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk fontconfig libcairo2
+          # cairosvg has no glyph fallback; fail early instead of rendering tofu
+          fc-list : family | grep -qx "Noto Sans CJK TC.*" || { echo "::error::Noto Sans CJK TC not installed"; fc-list : family | sort -u; exit 1; }
 
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt
@@ -43,6 +45,7 @@ jobs:
         env:
           GOOGLE_DRIVE_API_KEY: ${{ secrets.GOOGLE_DRIVE_API_KEY }}
           DRIVE_ROOT_FOLDER_ID: ${{ vars.DRIVE_ROOT_FOLDER_ID }}
+          MENU_FONT_FAMILY: Noto Sans CJK TC
         run: python scripts/update_menu.py ${{ inputs.all && '--all' || '' }}
 
       - name: Commit and push changes
