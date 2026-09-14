@@ -1,0 +1,60 @@
+name: Update cafeteria menu
+
+on:
+  schedule:
+    - cron: "0 18 * * *" # 02:00 Asia/Taipei
+  workflow_dispatch:
+    inputs:
+      all:
+        description: "Also re-render weeks before the current week"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-menu
+  cancel-in-progress: false
+
+jobs:
+  update-menu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+
+      - name: Install CJK fonts and Cairo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk libcairo2
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Generate menu images
+        env:
+          GOOGLE_DRIVE_API_KEY: ${{ secrets.GOOGLE_DRIVE_API_KEY }}
+          DRIVE_ROOT_FOLDER_ID: ${{ vars.DRIVE_ROOT_FOLDER_ID }}
+        run: python scripts/update_menu.py ${{ inputs.all && '--all' || '' }}
+
+      - name: Commit and push changes
+        # Push whatever was generated even if the missing-week check failed
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -z "$(git status --porcelain menus)" ]; then
+            echo "No menu changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add menus
+          git commit -m "chore(menu): auto update $(TZ=Asia/Taipei date +%F)"
+          git push
