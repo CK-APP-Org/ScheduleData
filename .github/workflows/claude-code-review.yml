@@ -21,7 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
+      # write, not read: the review is posted back as a PR comment. With read
+      # the job still runs and still costs CI minutes, but has no way to say
+      # what it found, so every result is silently discarded.
+      pull-requests: write
       issues: read
       id-token: write
 

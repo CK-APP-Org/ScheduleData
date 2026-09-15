@@ -20,8 +20,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
+      # write, not read: this job is triggered by an @claude mention and answers
+      # in the thread it was called from, which can be a PR or an issue. With
+      # read it can be summoned but cannot reply.
+      pull-requests: write
+      issues: write
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
     steps:
